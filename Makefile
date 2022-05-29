@@ -10,6 +10,6 @@ help:
 ## run and continuously rebuild when files change
 run:
 	(which reflex || go install github.com/cespare/reflex@latest)
-	reflex -s go run main.go
+	reflex -s -- bash -c 'source .envrc && go run .'
 
 
