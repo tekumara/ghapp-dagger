@@ -18,7 +18,8 @@ func main() {
 
 		// TODO: structured logging
 		log.Printf("check_suite: action %s owner %s repo %s headSHA %s\n",
-			*event.Action, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckSuite.HeadSHA)
+			*event.Action, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckSuite.HeadSHA,
+		)
 
 		if *event.Action == "requested" || *event.Action == "rerequested" {
 			createCheckRun(ctx.GitHub, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckSuite.HeadSHA)
@@ -30,11 +31,13 @@ func main() {
 	probot.HandleEvent("check_run", func(ctx *probot.Context) error {
 		event := ctx.Payload.(*github.CheckRunEvent)
 
-		log.Printf("check_run: app %d action %s owner %s repo %s headSHA %s\n",
-			event.CheckRun.App.GetID(), *event.Action, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckRun.HeadSHA)
+		log.Printf("check_run: app %d action %s id %d owner %s repo %s headSHA %s\n",
+			*event.CheckRun.App.ID, *event.Action, *event.CheckRun.ID,
+			*event.Repo.Owner.Login, *event.Repo.Name, *event.CheckRun.HeadSHA,
+		)
 
 		// we receive checks runs created by other apps installed in the repo, so only process our ones
-		if event.CheckRun.App.GetID() == app.ID {
+		if *event.CheckRun.App.ID == app.ID {
 
 			// the user has pressed "Re-run"
 			if *event.Action == "rerequested" {
@@ -61,13 +64,6 @@ func createCheckRun(ghClient *github.Client, owner, repo, headSHA string) {
 	ghClient.Checks.CreateCheckRun(context.TODO(), owner, repo, github.CreateCheckRunOptions{
 		Name:    "Demo Check",
 		HeadSHA: headSHA,
-		// Conclusion: github.String("failure"),
-		// Status:     github.String("completed"),
-		// Output: &github.CheckRunOutput{
-		// 	Title:   github.String("Config check failed"),
-		// 	Summary: github.String(fmt.Sprintf(errString, event.ExecutionContext.ID, actionName)),
-		// },
-		// ExternalID: github.String(fmt.Sprintf("%s/%s", event.ExecutionContext.ID, actionName)),
 	})
 }
 
