@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/google/go-github/github"
@@ -41,13 +42,16 @@ func main() {
 
 			// the user has pressed "Re-run"
 			if *event.Action == "rerequested" {
+				// TODO: handle errors
 				createCheckRun(ctx.GitHub, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckRun.HeadSHA)
 			}
 
 			// run the check
 			if *event.Action == "created" {
 				log.Println("check_run: execute check!")
-				executeCheck(ctx.GitHub, *event.Repo.Owner.Login, *event.Repo.Name, *event.CheckRun.ID)
+				if err := executeCheck(ctx.GitHub, event); err != nil {
+					log.Printf("ERROR: %v\n", err)
+				}
 			}
 
 		}
@@ -61,21 +65,67 @@ func main() {
 
 func createCheckRun(ghClient *github.Client, owner, repo, headSHA string) {
 	// TODO: check PRs from a fork are ignored
+	// TODO: handle errors
 	ghClient.Checks.CreateCheckRun(context.TODO(), owner, repo, github.CreateCheckRunOptions{
 		Name:    "Demo Check",
 		HeadSHA: headSHA,
 	})
 }
 
-func executeCheck(ghClient *github.Client, owner, repo string, checkRunID int64) {
-	ghClient.Checks.UpdateCheckRun(context.TODO(), owner, repo, checkRunID, github.UpdateCheckRunOptions{
-		Name:   "Demo Check",
-		Status: github.String("in_progress"),
-	})
+func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 
-	ghClient.Checks.UpdateCheckRun(context.TODO(), owner, repo, checkRunID, github.UpdateCheckRunOptions{
-		Name:       "Demo Check",
+	owner := *event.Repo.Owner.Login
+	repo := *event.Repo.Name
+	checkRunID := *event.CheckRun.ID
+	ref := *event.CheckRun.HeadSHA
+	repoUrl := *event.Repo.CloneURL
+	token := "TOO"
+
+	checkName := "Dagger"
+	ctx := context.Background()
+
+	updateCheckRunOutput := func(text string) error {
+		_, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
+			Name:   checkName,
+			Status: github.String("in_progress"),
+			Output: &github.CheckRunOutput{
+				Title:   github.String(checkName),
+				Summary: github.String("In progress ..."),
+				Text:    github.String(text),
+			},
+		})
+		return err
+	}
+
+	// update run to in progress (no output yet)
+	if err := updateCheckRunOutput("....."); err != nil {
+		return err
+	}
+
+	// execute dagger
+	output, execErr := execDagger(ctx, repoUrl, ref, token, updateCheckRunOutput)
+
+	var conclusion string
+	if execErr == nil {
+		conclusion = "success"
+	} else {
+		conclusion = "failure"
+		log.Printf("ERROR: execErr %+v", execErr)
+	}
+
+	// update run to complete with success or failure
+	if _, _, err := ghClient.Checks.UpdateCheckRun(context.TODO(), owner, repo, checkRunID, github.UpdateCheckRunOptions{
+		Name:       checkName,
 		Status:     github.String("completed"),
-		Conclusion: github.String("success"),
-	})
+		Conclusion: github.String(conclusion),
+		Output: &github.CheckRunOutput{
+			Title:   github.String(checkName),
+			Summary: github.String(fmt.Sprintf("Completed with %s", conclusion)),
+			Text:    github.String(output),
+		},
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

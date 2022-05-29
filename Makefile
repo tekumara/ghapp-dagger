@@ -12,4 +12,6 @@ run:
 	(which reflex || go install github.com/cespare/reflex@latest)
 	reflex -s -- bash -c 'source .envrc && go run .'
 
-
+format:
+	go fmt ./...
+	cue fmt ./...
