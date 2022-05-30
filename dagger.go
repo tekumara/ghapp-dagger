@@ -9,22 +9,22 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"golang.org/x/sync/errgroup"
 )
 
 func findDockerPath() (*string, error) {
-	cmd := exec.Command("which1", "docker")
+	cmd := exec.Command("which", "docker")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("combined out:\n%s\n", string(out))
-		log.Printf("ERROR: findDockerPath() failed with %s\n", err)
 		return nil, err
 	}
-	ret := string(out)
-	return &ret, nil
+	dir := filepath.Dir(string(out))
+	return &dir, nil
 }
 
+// TODO: replace updateOutput func with IO writer?
 func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput func(text string) error) (string, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
@@ -34,6 +34,7 @@ func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput fu
 
 	dockerPath, err := findDockerPath()
 	if err != nil {
+		log.Printf("ERROR: findDockerPath() failed with %s\n", err)
 		return err.Error(), err
 	}
 
@@ -47,8 +48,12 @@ func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput fu
 		// repo details
 		fmt.Sprintf("GITHUB_REPO_URL=%s", repoUrl),
 		fmt.Sprintf("GITHUB_REF=%s", ref),
-		fmt.Sprintf("GITHUB_TOKEN=%s", token),
 	}
+
+	log.Printf("cmd.Env %+v\n", cmd.Env)
+
+	// add token separately so it's not printed 
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", token))
 
 	combined := &bytes.Buffer{}
 
@@ -63,6 +68,7 @@ func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput fu
 		return cmd.Run()
 	})
 
+	// TODO: do we need errgroup or could this just be a goroutine?
 	g.Go(func() error {
 		scan := bufio.NewScanner(stdoutr)
 		for scan.Scan() {

@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/google/go-github/github"
 	"github.com/swinton/go-probot/probot"
 )
 
 func main() {
-	// TODO: replace with https://github.com/palantir/go-githubapp because it has caches for client creation
-	// & conditional requests to avoid rate limiting plus logging & metrics
+	// TODO: replace with https://github.com/palantir/go-githubapp because it has caches for client creation,
+	// async webhook request handling, conditional requests on the client to avoid rate limiting, logging & metrics
 	app := probot.NewApp()
 
 	probot.HandleEvent("check_suite", func(ctx *probot.Context) error {
@@ -50,6 +51,7 @@ func main() {
 			if *event.Action == "created" {
 				log.Println("check_run: execute check!")
 				if err := executeCheck(ctx.GitHub, event); err != nil {
+					//TODO: structured logging with context of request
 					log.Printf("ERROR: %v\n", err)
 				}
 			}
@@ -79,7 +81,8 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 	checkRunID := *event.CheckRun.ID
 	ref := *event.CheckRun.HeadSHA
 	repoUrl := *event.Repo.CloneURL
-	token := "TOO"
+	appID := *event.CheckRun.App.ID
+	installationID := *event.Installation.ID
 
 	checkName := "Dagger"
 	ctx := context.Background()
@@ -102,6 +105,32 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 		return err
 	}
 
+	// TODO: move this into initial setup
+	ghAppClient, err := appAuthedClient(os.Getenv("GITHUB_BASE_URL"), os.Getenv("GITHUB_APP_PRIVATE_KEY_PATH"), appID)
+	if err != nil {
+		return err
+	}
+
+	installationToken, _, err := ghAppClient.Apps.CreateInstallationToken(ctx, installationID)
+	if err != nil {
+		// update run to complete with success or failure
+		if _, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
+			Name:       checkName,
+			Status:     github.String("completed"),
+			Conclusion: github.String("failure"),
+			Output: &github.CheckRunOutput{
+				Title:   github.String(checkName),
+				Summary: github.String("Completed with failure"),
+				Text:    github.String(err.Error()),
+			},
+		}); err != nil {
+			return err
+		}
+		return fmt.Errorf("failed to create installation token: %v", err)
+	}
+
+	token := *installationToken.Token
+
 	// execute dagger
 	output, execErr := execDagger(ctx, repoUrl, ref, token, updateCheckRunOutput)
 
@@ -110,11 +139,12 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 		conclusion = "success"
 	} else {
 		conclusion = "failure"
+		// TODO: return execErr?
 		log.Printf("ERROR: execErr %+v", execErr)
 	}
 
 	// update run to complete with success or failure
-	if _, _, err := ghClient.Checks.UpdateCheckRun(context.TODO(), owner, repo, checkRunID, github.UpdateCheckRunOptions{
+	if _, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
 		Name:       checkName,
 		Status:     github.String("completed"),
 		Conclusion: github.String(conclusion),
