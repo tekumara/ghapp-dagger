@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/tekumara/ghapp-dagger/pkg/app"
+
 	"github.com/google/go-github/github"
 	"github.com/swinton/go-probot/probot"
 )
@@ -106,7 +108,7 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 	}
 
 	// TODO: move this into initial setup
-	ghAppClient, err := appAuthedClient(os.Getenv("GITHUB_BASE_URL"), os.Getenv("GITHUB_APP_PRIVATE_KEY_PATH"), appID)
+	ghAppClient, err := app.AppAuthedClient(os.Getenv("GITHUB_BASE_URL"), os.Getenv("GITHUB_APP_PRIVATE_KEY_PATH"), appID)
 	if err != nil {
 		return err
 	}
@@ -132,7 +134,7 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 	token := *installationToken.Token
 
 	// execute dagger
-	output, execErr := execDagger(ctx, repoUrl, ref, token, updateCheckRunOutput)
+	output, execErr := app.ExecDagger(ctx, repoUrl, ref, token, updateCheckRunOutput)
 
 	var conclusion string
 	if execErr == nil {

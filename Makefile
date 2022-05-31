@@ -21,3 +21,7 @@ format:
 dagger:
 	export GITHUB_TOKEN=$$(devtools/gh_token.sh $(GITHUB_REPO_URL)) && \
 		dagger do build --log-format plain $(if $(value nocache),--no-cache,)
+
+## test
+test:
+	go test ./...

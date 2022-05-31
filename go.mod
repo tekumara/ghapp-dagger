@@ -1,4 +1,4 @@
-module github.com/tekumara/ghapp-demo
+module github.com/tekumara/ghapp-dagger
 
 go 1.18
 

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"bufio"
@@ -25,7 +25,7 @@ func findDockerPath() (*string, error) {
 }
 
 // TODO: replace updateOutput func with IO writer?
-func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput func(text string) error) (string, error) {
+func ExecDagger(ctx context.Context, repoUrl, ref, token string, updateOutput func(text string) error) (string, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
 	cmd := exec.CommandContext(gctx, "dagger", "do", "build", "--log-format=plain")
@@ -52,7 +52,7 @@ func execDagger(ctx context.Context, repoUrl, ref, token string, updateOutput fu
 
 	log.Printf("cmd.Env %+v\n", cmd.Env)
 
-	// add token separately so it's not printed 
+	// add token separately so it's not printed
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GITHUB_TOKEN=%s", token))
 
 	combined := &bytes.Buffer{}
