@@ -12,6 +12,15 @@ run:
 	(which reflex || go install github.com/cespare/reflex@latest)
 	reflex -s -- bash -c 'source .envrc && go run .'
 
+## format
 format:
 	go fmt ./...
 	cue fmt ./...
+
+## run dagger. Use nocache=1 to run without cache.
+GITHUB_HOST ?= github.com
+GITHUB_REPO_URL ?= https://github.com/tekumara/ghapp-dagger.git
+GITHUB_REF ?= dd142c005ca6e2decf64b7e295e0f858d6195820
+dagger:
+	source devtools/gh_token.sh && export GITHUB_TOKEN=$$(gh_token $(GITHUB_HOST)) && \
+		dagger do build --log-format plain $(if $(value nocache),--no-cache,)
