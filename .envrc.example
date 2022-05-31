@@ -5,3 +5,7 @@ export GITHUB_BASE_URL= # E.g. https://github.acme.org/api/v3
 export GITHUB_APP_ID=
 export GITHUB_APP_PRIVATE_KEY_PATH=
 export GITHUB_APP_WEBHOOK_SECRET=development
+
+## these are used for testing
+export GITHUB_REPO_URL=https://github.com/tekumara/ghapp-dagger.git
+export GITHUB_REF=dd142c005ca6e2decf64b7e295e0f858d6195820

@@ -7,12 +7,17 @@
 
 # get the oauth token from the github cli config
 gh_token() {
-    github_host=${1:-}
+    local github_host=${1:-}
     local token
 
-    if [[ -z "${github_host}" ]]; then
+    if [[ -z "${1:-}" ]]; then
         echo -e "Missing github host, eg: $0 github.com" >&2
         return 42
+    elif [[ "$1" =~ https?://.* ]]; then
+        # extract hostname from url
+        github_host=$(echo "$1" | awk -F'[/:]' '{print $4}')
+    else
+        github_host=$1
     fi
 
     if ! hash gh; then
@@ -32,3 +37,5 @@ gh_token() {
 
     echo "$token"
 }
+
+gh_token "$1"
