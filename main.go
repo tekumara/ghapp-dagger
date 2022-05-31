@@ -89,6 +89,7 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 	checkName := "Dagger"
 	ctx := context.Background()
 
+	// TODO: trim to 65535 chars
 	updateCheckRunOutput := func(text string) error {
 		_, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
 			Name:   checkName,
@@ -113,9 +114,9 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 		return err
 	}
 
+	// create installation token valid for 1 hour to use for cloning the repo
 	installationToken, _, err := ghAppClient.Apps.CreateInstallationToken(ctx, installationID)
 	if err != nil {
-		// update run to complete with success or failure
 		if _, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
 			Name:       checkName,
 			Status:     github.String("completed"),
@@ -146,6 +147,7 @@ func executeCheck(ghClient *github.Client, event *github.CheckRunEvent) error {
 	}
 
 	// update run to complete with success or failure
+	// TODO: trim to 65535 chars
 	if _, _, err := ghClient.Checks.UpdateCheckRun(ctx, owner, repo, checkRunID, github.UpdateCheckRunOptions{
 		Name:       checkName,
 		Status:     github.String("completed"),

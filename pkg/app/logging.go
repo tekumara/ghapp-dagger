@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 )
 
@@ -13,6 +14,10 @@ var re = regexp.MustCompile(ansi)
 // stolen from https://github.com/acarl005/stripansi/blob/2749a05/stripansi.go
 func StripAnsi(str string) string {
 	return re.ReplaceAllString(str, "")
+}
+
+func MarkdownCodeBlock(str string) string {
+	return fmt.Sprintf("```\n%s\n```", str)
 }
 
 func jsonDump(v any) string {

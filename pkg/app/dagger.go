@@ -28,7 +28,7 @@ func findDockerPath() (*string, error) {
 func ExecDagger(ctx context.Context, repoUrl, ref, token string, updateOutput func(text string) error) (string, error) {
 	g, gctx := errgroup.WithContext(ctx)
 
-	cmd := exec.CommandContext(gctx, "dagger", "do", "build", "--log-format=plain")
+	cmd := exec.CommandContext(gctx, "dagger", "do", "ls", "--log-format=plain")
 
 	log.Printf("cmd %+v\n", cmd)
 
@@ -78,9 +78,7 @@ func ExecDagger(ctx context.Context, repoUrl, ref, token string, updateOutput fu
 		return nil
 	})
 
-	if cmdErr := g.Wait(); cmdErr != nil {
-		return StripAnsi(combined.String()), cmdErr
-	}
+	cmdErr := g.Wait()
 
-	return StripAnsi(combined.String()), nil
+	return MarkdownCodeBlock(StripAnsi(combined.String())), cmdErr
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // auth as a github app see https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
-// needed to create a installation token
+// needed to create installation tokens
 func AppAuthedClient(baseURL string, privateKeyPath string, appID int64) (*github.Client, error) {
 	privatePem, err := ioutil.ReadFile(privateKeyPath)
 	if err != nil {

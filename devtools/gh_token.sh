@@ -1,11 +1,13 @@
 #!/bin/bash
 
+# Get the oauth token from the github cli config
+#
 # Usage:
 #       gh_token github_host
 #
-# eg: source devtools/gh_token.sh && export GITHUB_TOKEN=$(gh_token github.com)
+# eg:
+#       export GITHUB_TOKEN=$(gh_token.sh github.com)
 
-# get the oauth token from the github cli config
 gh_token() {
     local github_host=${1:-}
     local token

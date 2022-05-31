@@ -31,7 +31,7 @@ dagger.#Plan & {
 			contents: _pull.output
 		}
 
-		build: bash.#Run & {
+		ls: bash.#Run & {
 			input: _copy.output
 			script: contents: "ls -al"
 		}
