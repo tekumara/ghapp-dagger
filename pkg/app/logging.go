@@ -20,7 +20,7 @@ func MarkdownCodeBlock(str string) string {
 	return fmt.Sprintf("```\n%s\n```", str)
 }
 
-func jsonDump(v any) string {
+func JsonDump(v any) string {
 	b, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
