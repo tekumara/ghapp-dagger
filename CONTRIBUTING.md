@@ -5,7 +5,7 @@
 Install the following:
 
 - docker: `brew install --cask docker`
-- [dagger](https://dagger.io/): ` brew install dagger/tap/dagger`
+- [dagger](https://dagger.io/): `brew install dagger/tap/dagger`
 - [ngrok](https://ngrok.com/): `brew install ngrok/ngrok/ngrok`
 
 ## Getting started
