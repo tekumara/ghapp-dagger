@@ -12,7 +12,7 @@ help:
 ## run and continuously rebuild when files change
 run:
 	(which reflex || go install github.com/cespare/reflex@latest)
-	reflex -s -- bash -c 'source .envrc && go run .'
+	reflex -s -d none -- bash -c 'source .envrc && go run .'
 
 ## format
 format:

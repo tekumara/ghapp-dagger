@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v45/github"
 )
 
 // auth as a github app see https://docs.github.com/en/developers/apps/building-github-apps/authenticating-with-github-apps#authenticating-as-a-github-app
