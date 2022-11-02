@@ -27,15 +27,7 @@ gh_token() {
         return 42
     fi
 
-    if ! hash yq; then
-        echo -e "https://github.com/mikefarah/yq is not installed.\nPlease install, eg: brew install yq" >&2
-        return 42
-    fi
-
-    if ! token=$(yq e ".\"$github_host\".oauth_token" -P ~/.config/gh/hosts.yml) || [[ $token == null ]]; then
-        echo -e "No token found for $github_host.\nPlease login into github, eg: gh auth login -h $github_host" >&2
-        return 42
-    fi
+    gh auth token -h "$github_host"
 
     echo "$token"
 }
